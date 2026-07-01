@@ -2,23 +2,23 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Super Mario World - Web Port</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Fonte Pixel oficial do Google Fonts para a marca d'água -->
+    <!-- Fonte Pixel para a marca d'água -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- Painel de Controle Superior -->
+    <!-- Painel de Controle Superior (Só aparece no PC) -->
     <div id="control-panel">
         <div class="panel-section">
             <span class="game-title">SMW Port</span>
         </div>
 
-        <div class="panel-section h-mobile">
+        <div class="panel-section">
             <label for="filter-select">Filtro:</label>
             <select id="filter-select" onchange="changeFilter(this.value)">
                 <option value="pixelated">Retro Sharp</option>
@@ -31,8 +31,8 @@
         </div>
 
         <div class="panel-section">
-            <button class="h-mobile" onclick="EJS_emulator.gameManager.controls.showMapping()">🎮 Controles</button>
-            <button onclick="toggleFullscreen()">📺 Tela Cheia / HDMI</button>
+            <button onclick="EJS_emulator.gameManager.controls.showMapping()">🎮 Controles</button>
+            <button onclick="toggleFullscreen()">📺 Tela Cheia</button>
         </div>
     </div>
 
@@ -43,31 +43,6 @@
         
         <div id="crt-overlay" class="hidden"></div>
         <div id="game"></div>
-
-        <!-- BOTÕES VIRTUAIS DO CELULAR -->
-        <div id="mobile-controls">
-            <!-- Direcional (D-Pad) -->
-            <div class="dpad">
-                <button class="btn-dpad up" ntouchstart="pressKey('ArrowUp')" ntouchend="releaseKey('ArrowUp')">▲</button>
-                <button class="btn-dpad left" ntouchstart="pressKey('ArrowLeft')" ntouchend="releaseKey('ArrowLeft')">◀</button>
-                <button class="btn-dpad right" ntouchstart="pressKey('ArrowRight')" ntouchend="releaseKey('ArrowRight')">▶</button>
-                <button class="btn-dpad down" ntouchstart="pressKey('ArrowDown')" ntouchend="releaseKey('ArrowDown')">▼</button>
-            </div>
-
-            <!-- Botões União (Menu/Start/Select) -->
-            <div class="menu-buttons">
-                <button class="btn-menu" ntouchstart="pressKey('Shift')" ntouchend="releaseKey('Shift')">SELECT</button>
-                <button class="btn-menu" ntouchstart="pressKey('Enter')" ntouchend="releaseKey('Enter')">START</button>
-            </div>
-
-            <!-- Botões de Ação (Layout SNES) -->
-            <div class="action-buttons">
-                <button class="btn-action b-x" ntouchstart="pressKey('s')" ntouchend="releaseKey('s')">X</button>
-                <button class="btn-action b-a" ntouchstart="pressKey('x')" ntouchend="releaseKey('x')">A</button>
-                <button class="btn-action b-y" ntouchstart="pressKey('a')" ntouchend="releaseKey('a')">Y</button>
-                <button class="btn-action b-b" ntouchstart="pressKey('z')" ntouchend="releaseKey('z')">B</button>
-            </div>
-        </div>
     </div>
 
     <!-- Script do Emulador -->
@@ -83,14 +58,6 @@
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
     <script>
-        // Funções de Toque para Celular
-        function pressKey(key) {
-            window.dispatchEvent(new KeyboardEvent('keydown', {'key': key}));
-        }
-        function releaseKey(key) {
-            window.dispatchEvent(new KeyboardEvent('keyup', {'key': key}));
-        }
-
         // Mudar Filtros de Tela
         function changeFilter(filterType) {
             const canvasContainer = document.querySelector('#game canvas');
@@ -121,13 +88,6 @@
                 document.exitFullscreen();
             }
         }
-
-        // Bloqueia o zoom de dois toques na tela do celular para não atrapalhar o jogo
-        document.addEventListener('touchstart', function (event) {
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
     </script>
 </body>
 </html>
