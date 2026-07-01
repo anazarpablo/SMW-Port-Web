@@ -1,103 +1,193 @@
-body {
+/* =========================================
+   CONFIGURAÇÃO GLOBAL (Bloqueia Toques Nativos)
+========================================= */
+html, body {
     margin: 0;
     padding: 0;
-    background-color: #000;
+    width: 100vw;
+    height: 100vh;
+    background-color: #050505;
     font-family: 'Segoe UI', sans-serif;
     color: #e0e0e0;
-    overflow: hidden;
+    overflow: hidden; /* Corta o scroll da tela */
+    touch-action: none; /* CRÍTICO: Impede que o celular tente dar zoom ou rolar a página */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.game-body {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    width: 100vw;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-#control-panel {
-    background-color: #16161a;
-    display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    padding: 10px 20px;
-    border-bottom: 2px solid #24242b;
-    z-index: 10;
 }
 
-.game-title {
-    font-weight: bold;
-    color: #ff4757;
-    text-transform: uppercase;
-}
-
-.panel-section { display: flex; align-items: center; gap: 15px; }
-
-select, button {
-    background-color: #24242b;
-    border: 1px solid #3f3f46;
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
+/* =========================================
+   ÁREA DO JOGO E HUD
+========================================= */
 #game-wrapper {
     position: relative;
-    flex-grow: 1;
+    width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: #000;
-    width: 100%;
-    height: 100%;
 }
 
 #game {
     width: 100% !important;
     height: 100% !important;
-    max-width: 800px;
-    aspect-ratio: 4/3;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Garante que a tela do jogo não corte, independente de estar em pé ou deitado */
 }
 
-/* MARCA D'ÁGUA PIXELADA */
 #watermark {
     position: absolute;
-    top: 15px;
-    right: 20px;
+    top: 10px;
+    right: 15px;
     font-family: 'Press Start 2P', monospace;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.4);
-    text-shadow: 2px 2px #000;
-    z-index: 8;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.3);
+    text-shadow: 1px 1px #000;
+    z-index: 10;
     pointer-events: none;
 }
 
-#crt-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-    background-size: 100% 4px; z-index: 5; pointer-events: none;
+/* Menu de Save / Load */
+.quick-menu {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
 }
 
-.hidden { display: none; }
+.btn-quick {
+    background: rgba(30, 30, 30, 0.7);
+    border: 1px solid #3f3f46;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-family: 'Press Start 2P', monospace;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    pointer-events: auto;
+}
 
-/* 📱 CORREÇÃO PARA CELULAR (TELA INTEIRA) */
-@media (max-width: 900px) {
-    #control-panel {
-        display: none !important; /* Esconde o menu no celular */
+.btn-quick:active {
+    background: #ff4757;
+}
+
+/* Sistema de Notificação (Toast) */
+#toast {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(46, 204, 113, 0.9);
+    color: #000;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 6px;
+    z-index: 999;
+    font-size: 12px;
+    transition: opacity 0.3s;
+}
+#toast.hidden { opacity: 0; pointer-events: none; }
+#toast.show { opacity: 1; }
+
+/* =========================================
+   CONTROLES VIRTUAIS (ESTILO CARBON UI)
+========================================= */
+#mobile-controls {
+    display: none; /* Escondido no PC */
+    width: 100%;
+    pointer-events: none; /* Deixa o toque vazar pro jogo onde não tem botão */
+    z-index: 5;
+}
+
+.btn-dpad, .btn-action, .btn-menu, .btn-trigger {
+    position: absolute;
+    pointer-events: auto; /* Ativa o toque apenas em cima dos botões */
+    background: rgba(40, 40, 40, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+}
+.btn-dpad:active, .btn-action:active, .btn-trigger:active {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+}
+
+/* Ajustes D-Pad (Formato de Cruz) */
+.dpad { position: absolute; }
+.btn-dpad { width: 45px; height: 45px; border-radius: 8px; }
+.dpad .up { top: 0; left: 45px; }
+.dpad .down { bottom: 0; left: 45px; }
+.dpad .left { top: 45px; left: 0; }
+.dpad .right { top: 45px; right: 90px; left: 90px; }
+.dpad-center { position: absolute; top: 45px; left: 45px; width: 45px; height: 45px; background: rgba(40, 40, 40, 0.6); pointer-events: none;}
+
+/* Botões de Ação */
+.action-buttons { position: absolute; }
+.btn-action { width: 50px; height: 50px; font-size: 16px; font-family: sans-serif; }
+.b-x { top: 0; left: 55px; }
+.b-a { top: 55px; left: 110px; }
+.b-b { top: 110px; left: 55px; }
+.b-y { top: 55px; left: 0; }
+
+/* Botões Select/Start e L/R */
+.btn-menu { width: 60px; height: 20px; border-radius: 10px; font-size: 9px; letter-spacing: 1px; }
+.btn-trigger { width: 80px; height: 35px; border-radius: 8px; font-size: 14px; }
+
+/* =========================================
+   📱 CELULAR: TELA DEITADA (PAISAGEM)
+========================================= */
+@media (max-width: 950px) and (orientation: landscape) {
+    #mobile-controls {
+        display: block;
+        position: absolute;
+        top: 0; left: 0; height: 100vh;
     }
+    #game-wrapper { height: 100vh; }
+    
+    .dpad { bottom: 15%; left: 5%; width: 135px; height: 135px; }
+    .action-buttons { bottom: 15%; right: 15%; width: 160px; height: 160px; }
+    .menu-buttons { bottom: 5%; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
+    .l-r-buttons .btn-trigger:nth-child(1) { top: 10px; left: 20px; }
+    .l-r-buttons .btn-trigger:nth-child(2) { top: 10px; right: 20px; }
+}
 
+/* =========================================
+   📱 CELULAR: TELA EM PÉ (RETRATO - ESTILO GAMEBOY)
+========================================= */
+@media (max-width: 950px) and (orientation: portrait) {
+    body { background-color: #111; }
     #game-wrapper {
-        width: 100vw;
-        height: 100vh;
+        height: 45vh; /* O jogo ocupa a parte de cima */
+        background-color: #000;
+        border-bottom: 2px solid #333;
+    }
+    #mobile-controls {
+        display: block;
+        position: relative;
+        height: 55vh; /* Os controles ocupam a parte de baixo */
+        background: #1a1a1a;
     }
 
-    #game {
-        max-width: 100%;
-        aspect-ratio: auto; /* Deixa o emulador esticar a tela corretamente */
-    }
-
-    #watermark {
-        font-size: 8px;
-        top: 10px;
-        right: 10px;
-    }
+    .dpad { top: 15%; left: 10%; width: 135px; height: 135px; }
+    .action-buttons { top: 15%; right: 40%; width: 160px; height: 160px; }
+    .menu-buttons { bottom: 15%; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; position: absolute; }
+    .l-r-buttons .btn-trigger:nth-child(1) { top: 5%; left: 10%; }
+    .l-r-buttons .btn-trigger:nth-child(2) { top: 5%; right: 10%; }
 }
