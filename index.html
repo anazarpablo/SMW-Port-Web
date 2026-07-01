@@ -12,37 +12,28 @@
     <div id="toast" class="hidden">Progresso Salvo!</div>
 
     <div id="game-wrapper">
-        <!-- Marca d'água atualizada -->
         <div id="watermark">Desenvolvido por thebloxlelled</div>
-        
         <div id="game"></div>
-
-        <div class="quick-menu">
-            <button class="btn-quick" id="btn-save">💾 Save</button>
-            <button class="btn-quick" id="btn-load">📂 Load</button>
-        </div>
     </div>
 
-    <!-- CONTROLES VIRTUAIS (Sem gambiarra no HTML) -->
-    <div id="mobile-controls">
+    <!-- Controles que o emulador NÃO consegue apagar -->
+    <div id="mobile-controls" class="persistent-controls">
         <div class="l-r-buttons">
             <button class="btn-trigger" data-key="q" data-code="KeyQ">L</button>
             <button class="btn-trigger" data-key="w" data-code="KeyW">R</button>
         </div>
-
         <div class="dpad">
             <button class="btn-dpad up" data-key="ArrowUp" data-code="ArrowUp"></button>
             <button class="btn-dpad down" data-key="ArrowDown" data-code="ArrowDown"></button>
             <button class="btn-dpad left" data-key="ArrowLeft" data-code="ArrowLeft"></button>
             <button class="btn-dpad right" data-key="ArrowRight" data-code="ArrowRight"></button>
-            <div class="dpad-center"></div>
         </div>
-
         <div class="menu-buttons">
             <button class="btn-menu" data-key="Shift" data-code="ShiftLeft">SELECT</button>
             <button class="btn-menu" data-key="Enter" data-code="Enter">START</button>
+            <button class="btn-quick" id="btn-save">💾</button>
+            <button class="btn-quick" id="btn-load">📂</button>
         </div>
-
         <div class="action-buttons">
             <button class="btn-action b-x" data-key="s" data-code="KeyS">X</button>
             <button class="btn-action b-a" data-key="x" data-code="KeyX">A</button>
@@ -51,95 +42,33 @@
         </div>
     </div>
 
-    <!-- Script do Emulador -->
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const romInUrl = urlParams.get('rom');
-        const coreInUrl = urlParams.get('core') || 'snes';
-
-        if (!romInUrl) {
-            window.location.href = 'index.html';
-        }
-
         EJS_player = '#game';
-        EJS_gameUrl = romInUrl; 
-        EJS_core = coreInUrl;
+        EJS_gameUrl = urlParams.get('rom');
+        EJS_core = urlParams.get('core') || 'snes';
         EJS_startOnLoaded = true;
         EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-        EJS_defaultVolume = 0.5;
-        EJS_Background = "#050505"; 
-        EJS_virtualGamepad = false; // Mantém o original desligado
+        EJS_virtualGamepad = false; // A parte mais importante: mata o controle nativo
     </script>
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
-    <!-- O NOVO SISTEMA DE CONTROLES E SAVE -->
     <script>
-        // Função para simular as teclas no emulador
-        function triggerKey(type, key, code) {
-            const event = new KeyboardEvent(type, {
-                key: key,
-                code: code,
-                bubbles: true,
-                cancelable: true
-            });
-            document.dispatchEvent(event);
-        }
-
-        // Aplica os eventos de toque blindados contra falhas do celular
-        const gameButtons = document.querySelectorAll('.btn-action, .btn-dpad, .btn-menu, .btn-trigger');
-        
-        gameButtons.forEach(btn => {
-            const key = btn.getAttribute('data-key');
-            const code = btn.getAttribute('data-code');
-
-            // Quando encosta o dedo
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // BLOQUEIA zoom e scroll da tela
-                btn.classList.add('pressed'); // Efeito visual de apertado
-                triggerKey('keydown', key, code);
-            }, { passive: false });
-
-            // Quando solta o dedo ou arrasta pra fora
-            const releaseBtn = (e) => {
+        // Lógica de botões blindada
+        document.querySelectorAll('button[data-key]').forEach(btn => {
+            ['touchstart', 'mousedown'].forEach(evt => btn.addEventListener(evt, (e) => {
                 e.preventDefault();
+                btn.classList.add('pressed');
+                document.dispatchEvent(new KeyboardEvent('keydown', {key: btn.dataset.key, code: btn.dataset.code}));
+            }));
+            ['touchend', 'mouseup', 'mouseleave'].forEach(evt => btn.addEventListener(evt, (e) => {
                 btn.classList.remove('pressed');
-                triggerKey('keyup', key, code);
-            };
-
-            btn.addEventListener('touchend', releaseBtn, { passive: false });
-            btn.addEventListener('touchcancel', releaseBtn, { passive: false });
+                document.dispatchEvent(new KeyboardEvent('keyup', {key: btn.dataset.key, code: btn.dataset.code}));
+            }));
         });
 
-        // Sistema de Save e Load blindado
-        function mostrarToast(mensagem) {
-            const toast = document.getElementById("toast");
-            toast.innerText = mensagem;
-            toast.classList.remove("hidden", "fade-out");
-            toast.classList.add("show");
-            setTimeout(() => {
-                toast.classList.add("fade-out");
-                setTimeout(() => toast.classList.remove("show"), 300);
-            }, 2500);
-        }
-
-        document.getElementById('btn-save').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
-                window.EJS_emulator.gameManager.quickSave();
-                mostrarToast("💾 Salvo!");
-            }
-        }, { passive: false });
-
-        document.getElementById('btn-load').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
-                window.EJS_emulator.gameManager.quickLoad();
-                mostrarToast("📂 Carregado!");
-            }
-        }, { passive: false });
-
-        // Trava final contra menus chatos do celular
-        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.getElementById('btn-save').onclick = () => { EJS_emulator.gameManager.quickSave(); alert('Salvo!'); };
+        document.getElementById('btn-load').onclick = () => { EJS_emulator.gameManager.quickLoad(); alert('Carregado!'); };
     </script>
 </body>
 </html>
