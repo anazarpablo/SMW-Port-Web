@@ -2,92 +2,117 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Super Mario World - Web Port</title>
+    <!-- Bloqueia totalmente o zoom e ajusta a tela para se comportar como um App nativo -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Game - Web Port</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Fonte Pixel para a marca d'água -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="game-body">
 
-    <!-- Painel de Controle Superior (Só aparece no PC) -->
-    <div id="control-panel">
-        <div class="panel-section">
-            <span class="game-title">SMW Port</span>
-        </div>
+    <!-- Notificação de Jogo Salvo -->
+    <div id="toast" class="hidden">Progresso Salvo!</div>
 
-        <div class="panel-section">
-            <label for="filter-select">Filtro:</label>
-            <select id="filter-select" onchange="changeFilter(this.value)">
-                <option value="pixelated">Retro Sharp</option>
-                <option value="smooth">Smooth</option>
-                <option value="crt">CRT Retro</option>
-            </select>
-
-            <label for="volume-slider">Volume:</label>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5" oninput="changeVolume(this.value)">
-        </div>
-
-        <div class="panel-section">
-            <button onclick="EJS_emulator.gameManager.controls.showMapping()">🎮 Controles</button>
-            <button onclick="toggleFullscreen()">📺 Tela Cheia</button>
-        </div>
-    </div>
-
-    <!-- Container do Jogo -->
+    <!-- Container Principal do Jogo -->
     <div id="game-wrapper">
-        <!-- MARCA D'ÁGUA PIXEL -->
+        <!-- MARCA D'ÁGUA -->
         <div id="watermark">Alcino9d2026Anazar</div>
         
-        <div id="crt-overlay" class="hidden"></div>
         <div id="game"></div>
+
+        <!-- Botões de Save/Load para Celular -->
+        <div class="quick-menu">
+            <button class="btn-quick" onpointerdown="salvarJogo()">💾 Save</button>
+            <button class="btn-quick" onpointerdown="carregarJogo()">📂 Load</button>
+        </div>
     </div>
 
-    <!-- Script do Emulador -->
+    <!-- CONTROLES VIRTUAIS (Nativos desativados, usando os seus) -->
+    <div id="mobile-controls">
+        <div class="l-r-buttons">
+            <button class="btn-trigger" onpointerdown="pressKey('q')" onpointerup="releaseKey('q')" onpointercancel="releaseKey('q')">L</button>
+            <button class="btn-trigger" onpointerdown="pressKey('w')" onpointerup="releaseKey('w')" onpointercancel="releaseKey('w')">R</button>
+        </div>
+
+        <div class="dpad">
+            <button class="btn-dpad up" onpointerdown="pressKey('ArrowUp')" onpointerup="releaseKey('ArrowUp')" onpointercancel="releaseKey('ArrowUp')"></button>
+            <button class="btn-dpad down" onpointerdown="pressKey('ArrowDown')" onpointerup="releaseKey('ArrowDown')" onpointercancel="releaseKey('ArrowDown')"></button>
+            <button class="btn-dpad left" onpointerdown="pressKey('ArrowLeft')" onpointerup="releaseKey('ArrowLeft')" onpointercancel="releaseKey('ArrowLeft')"></button>
+            <button class="btn-dpad right" onpointerdown="pressKey('ArrowRight')" onpointerup="releaseKey('ArrowRight')" onpointercancel="releaseKey('ArrowRight')"></button>
+            <div class="dpad-center"></div>
+        </div>
+
+        <div class="menu-buttons">
+            <button class="btn-menu" onpointerdown="pressKey('Shift')" onpointerup="releaseKey('Shift')">SELECT</button>
+            <button class="btn-menu" onpointerdown="pressKey('Enter')" onpointerup="releaseKey('Enter')">START</button>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-action b-x" onpointerdown="pressKey('s')" onpointerup="releaseKey('s')" onpointercancel="releaseKey('s')">X</button>
+            <button class="btn-action b-a" onpointerdown="pressKey('x')" onpointerup="releaseKey('x')" onpointercancel="releaseKey('x')">A</button>
+            <button class="btn-action b-y" onpointerdown="pressKey('a')" onpointerup="releaseKey('a')" onpointercancel="releaseKey('a')">Y</button>
+            <button class="btn-action b-b" onpointerdown="pressKey('z')" onpointerup="releaseKey('z')" onpointercancel="releaseKey('z')">B</button>
+        </div>
+    </div>
+
+    <!-- Script Inteligente do Emulador -->
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const romInUrl = urlParams.get('rom');
+        const coreInUrl = urlParams.get('core') || 'snes';
+
+        if (!romInUrl) {
+            window.location.href = 'index.html';
+        }
+
         EJS_player = '#game';
-        EJS_gameUrl = 'mario_world.sfc'; 
-        EJS_core = 'snes';
+        EJS_gameUrl = romInUrl; 
+        EJS_core = coreInUrl;
         EJS_startOnLoaded = true;
         EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
         EJS_defaultVolume = 0.5;
-        EJS_Background = "#000"; 
+        EJS_Background = "#050505"; 
+        EJS_virtualGamepad = false; // DESATIVA os controles bugados originais do emulador
     </script>
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
+    <!-- Sistema de Comandos -->
     <script>
-        // Mudar Filtros de Tela
-        function changeFilter(filterType) {
-            const canvasContainer = document.querySelector('#game canvas');
-            const crtOverlay = document.getElementById('crt-overlay');
-            if (!canvasContainer) return;
-            canvasContainer.style.imageRendering = 'auto';
-            crtOverlay.classList.add('hidden');
-            if (filterType === 'pixelated') canvasContainer.style.imageRendering = 'pixelated';
-            if (filterType === 'crt') {
-                canvasContainer.style.imageRendering = 'pixelated';
-                crtOverlay.classList.remove('hidden');
+        function pressKey(key) {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: key, code: key, bubbles: true }));
+        }
+        function releaseKey(key) {
+            document.dispatchEvent(new KeyboardEvent('keyup', { key: key, code: key, bubbles: true }));
+        }
+
+        // Sistema de Save/Load no Navegador
+        function salvarJogo() {
+            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
+                window.EJS_emulator.gameManager.quickSave();
+                mostrarToast("💾 Jogo Salvo no Navegador!");
             }
         }
 
-        // Alterar Volume
-        function changeVolume(value) {
-            if(window.EJS_emulator && EJS_emulator.gameManager) {
-                EJS_emulator.gameManager.audio.setVolume(parseFloat(value));
+        function carregarJogo() {
+            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
+                window.EJS_emulator.gameManager.quickLoad();
+                mostrarToast("📂 Jogo Carregado!");
             }
         }
 
-        // Alternar Tela Cheia
-        function toggleFullscreen() {
-            const wrapper = document.documentElement;
-            if (!document.fullscreenElement) {
-                wrapper.requestFullscreen().catch(err => alert(err.message));
-            } else {
-                document.exitFullscreen();
-            }
+        function mostrarToast(mensagem) {
+            const toast = document.getElementById("toast");
+            toast.innerText = mensagem;
+            toast.classList.remove("hidden");
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+                toast.classList.add("hidden");
+            }, 3000);
         }
+
+        // Impede menus de contexto e seleções que travam o jogo no celular
+        document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
 </html>
