@@ -2,7 +2,7 @@ html, body {
     margin: 0;
     padding: 0;
     width: 100vw;
-    height: 100dvh; /* dvh impede que a barra do mobile corte a tela */
+    height: 100dvh; 
     background-color: #050505;
     font-family: 'Segoe UI', sans-serif;
     color: #e0e0e0;
@@ -10,6 +10,7 @@ html, body {
     touch-action: none; 
     -webkit-user-select: none;
     user-select: none;
+    -webkit-touch-callout: none; /* Bloqueia pop-ups nativos no iOS/Android */
 }
 
 .game-body {
@@ -37,7 +38,6 @@ html, body {
     align-items: center;
 }
 
-/* Força o renderizador do jogo a não vazar a tela */
 #game canvas {
     max-width: 100vw !important;
     max-height: 100dvh !important; 
@@ -91,12 +91,16 @@ html, body {
     border-radius: 6px;
     z-index: 999;
     font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
     transition: opacity 0.3s;
 }
-#toast.hidden { opacity: 0; pointer-events: none; }
 #toast.show { opacity: 1; }
+#toast.fade-out { opacity: 0; }
 
-/* Controles Virtuais */
+/* =========================================
+   CONTROLES VIRTUAIS 
+========================================= */
 #mobile-controls {
     display: none; 
     width: 100%;
@@ -116,9 +120,13 @@ html, body {
     justify-content: center;
     align-items: center;
     border-radius: 50%;
+    transition: transform 0.05s, background 0.05s; /* Deixa o aperto macio */
 }
-.btn-dpad:active, .btn-action:active, .btn-trigger:active {
-    background: rgba(255, 255, 255, 0.4);
+
+/* O novo estado de botão apertado via JS */
+.btn-dpad.pressed, .btn-action.pressed, .btn-trigger.pressed, .btn-menu.pressed {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(0.9);
 }
 
 .dpad { position: absolute; }
@@ -126,7 +134,7 @@ html, body {
 .dpad .up { top: 0; left: 45px; }
 .dpad .down { bottom: 0; left: 45px; }
 .dpad .left { top: 45px; left: 0; }
-.dpad .right { top: 45px; left: 90px; } /* ERRO CORRIGIDO AQUI */
+.dpad .right { top: 45px; left: 90px; } 
 .dpad-center { position: absolute; top: 45px; left: 45px; width: 45px; height: 45px; background: rgba(40, 40, 40, 0.6); pointer-events: none;}
 
 .action-buttons { position: absolute; }
@@ -139,7 +147,7 @@ html, body {
 .btn-menu { width: 60px; height: 20px; border-radius: 10px; font-size: 9px; letter-spacing: 1px; }
 .btn-trigger { width: 80px; height: 35px; border-radius: 8px; font-size: 14px; }
 
-/* Oculta controles nativos do emulador caso tentem carregar */
+/* Desativa controles nativos */
 .ejs_virtual_gamepad { display: none !important; }
 
 /* CELULAR - PAISAGEM (DEITADO) */
