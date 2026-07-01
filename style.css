@@ -1,0 +1,154 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #0b0b0b;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#control-panel {
+    background-color: #16161a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 2px solid #24242b;
+    z-index: 10;
+}
+
+.game-title {
+    font-weight: bold;
+    color: #ff4757;
+    text-transform: uppercase;
+}
+
+.panel-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+select, button {
+    background-color: #24242b;
+    border: 1px solid #3f3f46;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#game-wrapper {
+    position: relative;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+}
+
+#game {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 800px;
+    aspect-ratio: 4/3;
+}
+
+/* MARCA D'ÁGUA PIXELADA */
+#watermark {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    text-shadow: 2px 2px #000;
+    z-index: 8;
+    pointer-events: none;
+}
+
+/* Esconde controles mobile por padrão no PC */
+#mobile-controls {
+    display: none;
+}
+
+#crt-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.hidden { display: none; }
+
+/* 📱 ADAPTAÇÃO COMPLETA PARA CELULAR (TELA PEQUENA/HORIZONTAL) */
+@media (max-width: 900px) {
+    .h-mobile { display: none !important; } /* Esconde o desnecessário no topo */
+    
+    #game {
+        max-width: 70%;
+        height: auto !important;
+    }
+
+    #mobile-controls {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 6;
+        pointer-events: none;
+    }
+
+    /* Botões clicáveis */
+    .btn-dpad, .btn-action, .btn-menu {
+        position: absolute;
+        pointer-events: auto;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        border-radius: 50%;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        active-background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* D-Pad Digital */
+    .dpad { position: absolute; bottom: 15%; left: 4%; width: 140px; height: 140px; pointer-events: auto;}
+    .btn-dpad { width: 45px; height: 45px; border-radius: 8px; }
+    .up { top: 0; left: 45px; }
+    .down { bottom: 0; left: 45px; }
+    .left { top: 45px; left: 0; }
+    .right { top: 45px; right: 0; }
+
+    /* Menu Centro (Select / Start) */
+    .menu-buttons { position: absolute; bottom: 5%; left: 42%; display: flex; gap: 10px; pointer-events: auto; }
+    .btn-menu { position: relative; width: 65px; height: 25px; border-radius: 20px; font-size: 9px; }
+
+    /* Botões de Ação SNES */
+    .action-buttons { position: absolute; bottom: 15%; right: 4%; width: 140px; height: 140px; pointer-events: auto;}
+    .btn-action { width: 45px; height: 45px; }
+    .b-x { top: 0; left: 45px; background: rgba(142, 68, 173, 0.4); }
+    .b-a { top: 45px; right: 0; background: rgba(231, 76, 60, 0.4); }
+    .b-b { bottom: 0; left: 45px; background: rgba(241, 196, 15, 0.4); }
+    .b-y { top: 45px; left: 0; background: rgba(52, 152, 219, 0.4); }
+    
+    #watermark {
+        font-size: 8px;
+        top: 5px;
+        right: 10px;
+    }
+}
