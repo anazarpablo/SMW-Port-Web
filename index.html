@@ -12,44 +12,46 @@
     <div id="toast" class="hidden">Progresso Salvo!</div>
 
     <div id="game-wrapper">
-        <div id="watermark">Alcino9d2026Anazar</div>
+        <!-- Marca d'água atualizada -->
+        <div id="watermark">Desenvolvido por thebloxlelled</div>
         
         <div id="game"></div>
 
         <div class="quick-menu">
-            <button class="btn-quick" ontouchstart="salvarJogo(event)">💾 Save</button>
-            <button class="btn-quick" ontouchstart="carregarJogo(event)">📂 Load</button>
+            <button class="btn-quick" id="btn-save">💾 Save</button>
+            <button class="btn-quick" id="btn-load">📂 Load</button>
         </div>
     </div>
 
-    <!-- CONTROLES VIRTUAIS CORRIGIDOS -->
+    <!-- CONTROLES VIRTUAIS (Sem gambiarra no HTML) -->
     <div id="mobile-controls">
         <div class="l-r-buttons">
-            <button class="btn-trigger" ontouchstart="pressKey(event, 'q')" ontouchend="releaseKey(event, 'q')">L</button>
-            <button class="btn-trigger" ontouchstart="pressKey(event, 'w')" ontouchend="releaseKey(event, 'w')">R</button>
+            <button class="btn-trigger" data-key="q" data-code="KeyQ">L</button>
+            <button class="btn-trigger" data-key="w" data-code="KeyW">R</button>
         </div>
 
         <div class="dpad">
-            <button class="btn-dpad up" ontouchstart="pressKey(event, 'ArrowUp')" ontouchend="releaseKey(event, 'ArrowUp')"></button>
-            <button class="btn-dpad down" ontouchstart="pressKey(event, 'ArrowDown')" ontouchend="releaseKey(event, 'ArrowDown')"></button>
-            <button class="btn-dpad left" ontouchstart="pressKey(event, 'ArrowLeft')" ontouchend="releaseKey(event, 'ArrowLeft')"></button>
-            <button class="btn-dpad right" ontouchstart="pressKey(event, 'ArrowRight')" ontouchend="releaseKey(event, 'ArrowRight')"></button>
+            <button class="btn-dpad up" data-key="ArrowUp" data-code="ArrowUp"></button>
+            <button class="btn-dpad down" data-key="ArrowDown" data-code="ArrowDown"></button>
+            <button class="btn-dpad left" data-key="ArrowLeft" data-code="ArrowLeft"></button>
+            <button class="btn-dpad right" data-key="ArrowRight" data-code="ArrowRight"></button>
             <div class="dpad-center"></div>
         </div>
 
         <div class="menu-buttons">
-            <button class="btn-menu" ontouchstart="pressKey(event, 'Shift')" ontouchend="releaseKey(event, 'Shift')">SELECT</button>
-            <button class="btn-menu" ontouchstart="pressKey(event, 'Enter')" ontouchend="releaseKey(event, 'Enter')">START</button>
+            <button class="btn-menu" data-key="Shift" data-code="ShiftLeft">SELECT</button>
+            <button class="btn-menu" data-key="Enter" data-code="Enter">START</button>
         </div>
 
         <div class="action-buttons">
-            <button class="btn-action b-x" ontouchstart="pressKey(event, 's')" ontouchend="releaseKey(event, 's')">X</button>
-            <button class="btn-action b-a" ontouchstart="pressKey(event, 'x')" ontouchend="releaseKey(event, 'x')">A</button>
-            <button class="btn-action b-y" ontouchstart="pressKey(event, 'a')" ontouchend="releaseKey(event, 'a')">Y</button>
-            <button class="btn-action b-b" ontouchstart="pressKey(event, 'z')" ontouchend="releaseKey(event, 'z')">B</button>
+            <button class="btn-action b-x" data-key="s" data-code="KeyS">X</button>
+            <button class="btn-action b-a" data-key="x" data-code="KeyX">A</button>
+            <button class="btn-action b-y" data-key="a" data-code="KeyA">Y</button>
+            <button class="btn-action b-b" data-key="z" data-code="KeyZ">B</button>
         </div>
     </div>
 
+    <!-- Script do Emulador -->
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const romInUrl = urlParams.get('rom');
@@ -66,50 +68,78 @@
         EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
         EJS_defaultVolume = 0.5;
         EJS_Background = "#050505"; 
-        EJS_virtualGamepad = false; 
+        EJS_virtualGamepad = false; // Mantém o original desligado
     </script>
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
+    <!-- O NOVO SISTEMA DE CONTROLES E SAVE -->
     <script>
-        // Sistema de Controle com bloqueio nativo
-        function pressKey(e, key) {
-            if(e) e.preventDefault(); // Impede o navegador de tentar rolar a tela
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
-        }
-        function releaseKey(e, key) {
-            if(e) e.preventDefault();
-            window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
-        }
-
-        // Sistema de Save
-        function salvarJogo(e) {
-            if(e) e.preventDefault();
-            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
-                window.EJS_emulator.gameManager.quickSave();
-                mostrarToast("💾 Jogo Salvo!");
-            }
+        // Função para simular as teclas no emulador
+        function triggerKey(type, key, code) {
+            const event = new KeyboardEvent(type, {
+                key: key,
+                code: code,
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(event);
         }
 
-        function carregarJogo(e) {
-            if(e) e.preventDefault();
-            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
-                window.EJS_emulator.gameManager.quickLoad();
-                mostrarToast("📂 Jogo Carregado!");
-            }
-        }
+        // Aplica os eventos de toque blindados contra falhas do celular
+        const gameButtons = document.querySelectorAll('.btn-action, .btn-dpad, .btn-menu, .btn-trigger');
+        
+        gameButtons.forEach(btn => {
+            const key = btn.getAttribute('data-key');
+            const code = btn.getAttribute('data-code');
 
+            // Quando encosta o dedo
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // BLOQUEIA zoom e scroll da tela
+                btn.classList.add('pressed'); // Efeito visual de apertado
+                triggerKey('keydown', key, code);
+            }, { passive: false });
+
+            // Quando solta o dedo ou arrasta pra fora
+            const releaseBtn = (e) => {
+                e.preventDefault();
+                btn.classList.remove('pressed');
+                triggerKey('keyup', key, code);
+            };
+
+            btn.addEventListener('touchend', releaseBtn, { passive: false });
+            btn.addEventListener('touchcancel', releaseBtn, { passive: false });
+        });
+
+        // Sistema de Save e Load blindado
         function mostrarToast(mensagem) {
             const toast = document.getElementById("toast");
             toast.innerText = mensagem;
-            toast.classList.remove("hidden");
+            toast.classList.remove("hidden", "fade-out");
             toast.classList.add("show");
             setTimeout(() => {
-                toast.classList.remove("show");
-                toast.classList.add("hidden");
-            }, 3000);
+                toast.classList.add("fade-out");
+                setTimeout(() => toast.classList.remove("show"), 300);
+            }, 2500);
         }
 
-        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.getElementById('btn-save').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
+                window.EJS_emulator.gameManager.quickSave();
+                mostrarToast("💾 Salvo!");
+            }
+        }, { passive: false });
+
+        document.getElementById('btn-load').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if(window.EJS_emulator && window.EJS_emulator.gameManager) {
+                window.EJS_emulator.gameManager.quickLoad();
+                mostrarToast("📂 Carregado!");
+            }
+        }, { passive: false });
+
+        // Trava final contra menus chatos do celular
+        document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
