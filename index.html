@@ -7,68 +7,147 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-<body class="game-body">
+<body>
 
-    <div id="toast" class="hidden">Progresso Salvo!</div>
-
-    <div id="game-wrapper">
-        <div id="watermark">Desenvolvido por thebloxlelled</div>
-        <div id="game"></div>
+    <div id="rotate-screen">
+        <div>📱🔄<br><br>Gire o celular para jogar</div>
     </div>
 
-    <!-- Controles que o emulador NÃO consegue apagar -->
-    <div id="mobile-controls" class="persistent-controls">
-        <div class="l-r-buttons">
-            <button class="btn-trigger" data-key="q" data-code="KeyQ">L</button>
-            <button class="btn-trigger" data-key="w" data-code="KeyW">R</button>
+    <div id="toast"></div>
+
+    <div id="game-container">
+        
+        <div class="watermark">Desenvolvido por thebloxlelled</div>
+        
+        <div id="game"></div>
+
+        <div class="top-menu">
+            <button class="sys-btn" id="btn-fs">🔲 Tela Cheia</button>
+            <button class="sys-btn" id="btn-save">💾 Salvar</button>
+            <button class="sys-btn" id="btn-load">📂 Carregar</button>
         </div>
-        <div class="dpad">
-            <button class="btn-dpad up" data-key="ArrowUp" data-code="ArrowUp"></button>
-            <button class="btn-dpad down" data-key="ArrowDown" data-code="ArrowDown"></button>
-            <button class="btn-dpad left" data-key="ArrowLeft" data-code="ArrowLeft"></button>
-            <button class="btn-dpad right" data-key="ArrowRight" data-code="ArrowRight"></button>
-        </div>
-        <div class="menu-buttons">
-            <button class="btn-menu" data-key="Shift" data-code="ShiftLeft">SELECT</button>
-            <button class="btn-menu" data-key="Enter" data-code="Enter">START</button>
-            <button class="btn-quick" id="btn-save">💾</button>
-            <button class="btn-quick" id="btn-load">📂</button>
-        </div>
-        <div class="action-buttons">
-            <button class="btn-action b-x" data-key="s" data-code="KeyS">X</button>
-            <button class="btn-action b-a" data-key="x" data-code="KeyX">A</button>
-            <button class="btn-action b-y" data-key="a" data-code="KeyA">Y</button>
-            <button class="btn-action b-b" data-key="z" data-code="KeyZ">B</button>
+
+        <div id="touch-controls">
+            <button class="control-btn trigger left-trigger" data-key="q" data-code="KeyQ">L</button>
+            <button class="control-btn trigger right-trigger" data-key="w" data-code="KeyW">R</button>
+
+            <div class="dpad-box">
+                <button class="control-btn dpad up" data-key="ArrowUp" data-code="ArrowUp"></button>
+                <button class="control-btn dpad down" data-key="ArrowDown" data-code="ArrowDown"></button>
+                <button class="control-btn dpad left" data-key="ArrowLeft" data-code="ArrowLeft"></button>
+                <button class="control-btn dpad right" data-key="ArrowRight" data-code="ArrowRight"></button>
+                <div class="dpad-center"></div>
+            </div>
+
+            <div class="center-menu">
+                <button class="control-btn menu-btn" data-key="Shift" data-code="ShiftLeft">SELECT</button>
+                <button class="control-btn menu-btn" data-key="Enter" data-code="Enter">START</button>
+            </div>
+
+            <div class="action-box">
+                <button class="control-btn action btn-x" data-key="s" data-code="KeyS">X</button>
+                <button class="control-btn action btn-y" data-key="a" data-code="KeyA">Y</button>
+                <button class="control-btn action btn-a" data-key="x" data-code="KeyX">A</button>
+                <button class="control-btn action btn-b" data-key="z" data-code="KeyZ">B</button>
+            </div>
         </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
+        const rom = urlParams.get('rom');
+        const core = urlParams.get('core') || 'snes';
+
+        if (!rom) window.location.href = 'index.html';
+
         EJS_player = '#game';
-        EJS_gameUrl = urlParams.get('rom');
-        EJS_core = urlParams.get('core') || 'snes';
+        EJS_gameUrl = rom; 
+        EJS_core = core;
         EJS_startOnLoaded = true;
         EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-        EJS_virtualGamepad = false; // A parte mais importante: mata o controle nativo
+        EJS_defaultVolume = 0.5;
+        EJS_Background = "#000000"; 
+        EJS_virtualGamepad = false; 
     </script>
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
     <script>
-        // Lógica de botões blindada
-        document.querySelectorAll('button[data-key]').forEach(btn => {
-            ['touchstart', 'mousedown'].forEach(evt => btn.addEventListener(evt, (e) => {
+        // Emulação nativa de eventos de teclado
+        const fireKeyEvent = (type, key, code) => {
+            const event = new KeyboardEvent(type, {
+                key: key,
+                code: code,
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(event);
+        };
+
+        // Vinculação de comandos nos botões do gamepad virtual (Mobile)
+        document.querySelectorAll('#touch-controls .control-btn').forEach(btn => {
+            const key = btn.getAttribute('data-key');
+            const code = btn.getAttribute('data-code');
+
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); 
+                btn.classList.add('active');
+                fireKeyEvent('keydown', key, code);
+            }, { passive: false });
+
+            const handleRelease = (e) => {
                 e.preventDefault();
-                btn.classList.add('pressed');
-                document.dispatchEvent(new KeyboardEvent('keydown', {key: btn.dataset.key, code: btn.dataset.code}));
-            }));
-            ['touchend', 'mouseup', 'mouseleave'].forEach(evt => btn.addEventListener(evt, (e) => {
-                btn.classList.remove('pressed');
-                document.dispatchEvent(new KeyboardEvent('keyup', {key: btn.dataset.key, code: btn.dataset.code}));
-            }));
+                btn.classList.remove('active');
+                fireKeyEvent('keyup', key, code);
+            };
+
+            btn.addEventListener('touchend', handleRelease, { passive: false });
+            btn.addEventListener('touchcancel', handleRelease, { passive: false });
         });
 
-        document.getElementById('btn-save').onclick = () => { EJS_emulator.gameManager.quickSave(); alert('Salvo!'); };
-        document.getElementById('btn-load').onclick = () => { EJS_emulator.gameManager.quickLoad(); alert('Carregado!'); };
+        // Feedback visual de interface
+        const showToast = (msg) => {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2000);
+        };
+
+        // Manipulador híbrido para botões do sistema (Mouse + Touch)
+        const setupSystemButton = (id, action) => {
+            const btn = document.getElementById(id);
+            ['touchstart', 'mousedown'].forEach(eventType => {
+                btn.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    action();
+                }, { passive: false });
+            });
+        };
+
+        // Ações estruturais do Emulador
+        setupSystemButton('btn-save', () => {
+            if (window.EJS_emulator && window.EJS_emulator.gameManager) {
+                window.EJS_emulator.gameManager.quickSave();
+                showToast('💾 Progresso Salvo!');
+            }
+        });
+
+        setupSystemButton('btn-load', () => {
+            if (window.EJS_emulator && window.EJS_emulator.gameManager) {
+                window.EJS_emulator.gameManager.quickLoad();
+                showToast('📂 Jogo Carregado!');
+            }
+        });
+
+        setupSystemButton('btn-fs', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.error(err));
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Bloqueio de menus de contexto do navegador durante o jogo
+        document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
